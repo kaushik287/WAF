@@ -1,0 +1,76 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xpostgresqlinstances.aws.database.example.org
+  labels:
+    provider: aws
+    guide: quickstart
+    vpc: default
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  compositeTypeRef:
+    apiVersion: database.example.org/v1alpha1
+    kind: XPostgreSQLInstance
+  resources:
+    - name: rdsinstance
+      base:
+        apiVersion: database.aws.crossplane.io/v1beta1
+        kind: RDSInstance
+        spec:
+          forProvider:
+            name: aws
+            dbSubnetGroupName: default
+            autoMinorVersionUpgrade: true
+            backupRetentionPeriod: 0
+            caCertificateIdentifier: rds-ca-2019
+            copyTagsToSnapshot: false
+           ## dbInstanceClass: db.t3.medium
+            deletionProtection: false
+            enableIAMDatabaseAuthentication: false
+            enablePerformanceInsights: false
+            ##engine: postgres
+            ##engineVersion: "13"
+            finalDBSnapshotIdentifier: orange-test
+            masterUsername: orange
+            ##multiAZ: false
+            port: 5432
+            preferredBackupWindow: 06:15-06:45
+            preferredMaintenanceWindow: sat:09:21-sat:09:51
+            publiclyAccessible: false
+            storageEncrypted: false
+           ## storageType: gp2
+          writeConnectionSecretToRef:
+            namespace: crossplane-system
+            name: default
+      patches:
+        - fromFieldPath: "spec.parameters.rg-test"
+          toFieldPath: "spec.forProvider.region"
+        
+        - fromFieldPath: "spec.parameters.dbInsClass"
+          toFieldPath: "spec.forProvider.dbInstanceClass"
+
+        - fromFieldPath: "spec.parameters.eng"
+          toFieldPath: "spec.forProvider.engine"
+
+        - fromFieldPath: "spec.parameters.engVersion"
+          toFieldPath: "spec.forProvider.engineVersion"
+        
+        - fromFieldPath: "spec.parameters.multiAZ"
+          toFieldPath: "spec.forProvider.multiAZ"
+        
+        - fromFieldPath: "spec.parameters.storageType"
+          toFieldPath: "spec.forProvider.storageType"
+          
+        - fromFieldPath: "metadata.uid"
+          toFieldPath: "spec.writeConnectionSecretToRef.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-postgresql"
+        - fromFieldPath: "spec.parameters.storageGB"
+          toFieldPath: "spec.forProvider.allocatedStorage"
+      connectionDetails:
+        - fromConnectionSecretKey: username
+        - fromConnectionSecretKey: password
+        - fromConnectionSecretKey: endpoint
+        - fromConnectionSecretKey: port

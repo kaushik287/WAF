@@ -1,0 +1,20 @@
+apiVersion: database.example.org/v1alpha1
+kind: PostgreSQLInstance
+metadata:
+  name: damyan-test
+  namespace: default
+spec:
+  parameters:
+    storageGB: 10
+    rg-test: us-east-1
+    dbInsClass: db.t3.small
+    eng: postgres
+    engVersion: "13"
+    multiAZ: false
+    storageType: gp2  
+  compositionSelector:
+    matchLabels:
+      provider: aws
+      vpc: default
+  writeConnectionSecretToRef:
+    name: db-conn
